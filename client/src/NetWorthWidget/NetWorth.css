@@ -1,0 +1,46 @@
+.net-worth-root {
+  display: grid;
+  width: 100%;
+  max-width: 800px;
+}
+
+.net-worth-row {
+  display: flex;
+  flex-direction: row;
+  padding: 5px 0px;
+}
+
+.net-worth-row-value-wrap {
+  display: flex;
+  flex-direction: row;
+  border-bottom: 1px solid black;
+}
+
+.net-worth-header {
+  flex-grow: 1;
+}
+
+.net-worth-heading-title {
+  flex-grow: 1;
+}
+
+.net-worth-heading {
+  width: 100%;
+  display: flex;
+  /* border-top: 1px solid black; */
+  border-bottom: 1px solid black;
+}
+
+.net-worth-row-space {
+  height: 30px;
+}
+
+.net-worth-row input {
+  border: none;
+  text-align: right;
+}
+
+.net-worth-row input:focus {
+  outline: none;
+  border: none;
+}
