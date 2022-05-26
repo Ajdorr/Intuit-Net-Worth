@@ -1,92 +1,13 @@
-const express = require("express");
+var express = require('express')
+var router = express.Router()
+
 var https = require("https")
+
 const Ajv = require("ajv");
-
-const PORT = 5000;
-
-const app = express();
-app.use(express.json())
-
 const ajv = new Ajv()
 
+var update = require('./update.js')
 
-function calcTotals(netWorthObj) {
-
-  netWorthObj.totalAssets = (
-    netWorthObj.chequing +
-    netWorthObj.rainyDayFund +
-    netWorthObj.savingsTaxes +
-    netWorthObj.savingsFun +
-    netWorthObj.savingsTravel +
-    netWorthObj.savingsPD +
-    netWorthObj.investment1 +
-    netWorthObj.investment2 +
-    netWorthObj.investment3 +
-    netWorthObj.primaryHome +
-    netWorthObj.secondaryHome)
-
-  netWorthObj.totalLiabilities = (
-    netWorthObj.creditCard1 +
-    netWorthObj.creditCard2 +
-    netWorthObj.mortgage1 +
-    netWorthObj.mortgage2 +
-    netWorthObj.lineOfCredit +
-    netWorthObj.investmentLoan)
-
-  netWorthObj.netWorth = netWorthObj.totalAssets - netWorthObj.totalLiabilities
-}
-
-const updateSchema = {
-  type: "object",
-  properties: {
-    currencySymbol: { type: "string" },
-    currency: { type: "string" },
-    chequing: { type: "number" },
-    rainyDayFund: { type: "number" },
-    savingsTaxes: { type: "number" },
-    savingsFun: { type: "number" },
-    savingsTravel: { type: "number" },
-    savingsPD: { type: "number" },
-    investment1: { type: "number" },
-    investment2: { type: "number" },
-    investment3: { type: "number" },
-    primaryHome: { type: "number" },
-    secondaryHome: { type: "number" },
-    creditCard1: { type: "number" },
-    creditCard2: { type: "number" },
-    mortgage1: { type: "number" },
-    mortgage2: { type: "number" },
-    lineOfCredit: { type: "number" },
-    investmentLoan: { type: "number" },
-    totalLiabilities: { type: "number" },
-    totalAssets: { type: "number" },
-    netWorth: { type: "number" },
-  },
-  required: [
-    "chequing", "rainyDayFund", "savingsTaxes", "savingsFun",
-    "savingsTravel", "savingsPD", "investment1", "investment2",
-    "investment3", "primaryHome", "secondaryHome", "creditCard1",
-    "creditCard2", "mortgage1", "mortgage2", "lineOfCredit",
-    "investmentLoan"],
-  additionalProperties: false,
-}
-const validateUpdate = ajv.compile(updateSchema)
-
-
-app.post("/api/update", (req, rsp) => {
-
-  console.log(req.body)
-  let payload = { ...req.body }
-  if (!validateUpdate(payload)) {
-    rsp.status(400)
-    rsp.send()
-  }
-  else {
-    calcTotals(payload)
-    rsp.setHeader('Content-Type', 'application/json');
-    rsp.send(JSON.stringify(payload))
-  }
-})
 
 function convertCurrency(conversionRate, newCurrency, netWorthObj) {
 
@@ -155,7 +76,7 @@ const convertSchema = {
 }
 const validateConvert = ajv.compile(convertSchema)
 
-app.post("/api/changeCurrency", (req, rsp) => {
+router.post("/api/changeCurrency", (req, rsp) => {
 
   if (!validateConvert(req.body)) {
     rsp.status(400)
@@ -186,7 +107,7 @@ app.post("/api/changeCurrency", (req, rsp) => {
       }
 
       convertCurrency(currConvRspBody[convCurrKey], req.body.newCurrency, req.body.oldState)
-      calcTotals(req.body.oldState)
+      update.calcTotals(req.body.oldState)
 
       rsp.setHeader('Content-Type', 'application/json');
       rsp.send(JSON.stringify(req.body.oldState))
@@ -196,7 +117,4 @@ app.post("/api/changeCurrency", (req, rsp) => {
   }).on('error', e => { console.error(e); rsp.status(500).send("Error") })
 })
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server listening on ${PORT}`)
-})
-
+module.exports = router
