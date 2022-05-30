@@ -1,12 +1,29 @@
-var express = require('express')
-var router = express.Router()
+const express = require('express')
+const router = express.Router()
 
-var https = require("https")
+const https = require("https")
+const fs = require("fs")
 
 const Ajv = require("ajv");
 const ajv = new Ajv()
 
 var update = require('./update.js')
+
+var currencyConvApiKey = undefined
+try {
+  currencyConvApiKey = fs.readFileSync('currConvApiKey.txt', 'utf8')
+}
+catch (e) {
+  console.log(e)
+}
+
+var exchangeRatesApiKey = undefined
+try {
+  exchangeRatesApiKey = fs.readFileSync('exchangeRatesApiKey.txt', 'utf8')
+}
+catch (e) {
+  console.log(e)
+}
 
 
 function convertCurrency(conversionRate, newCurrency, netWorthObj) {
@@ -84,29 +101,35 @@ router.post("/api/changeCurrency", (req, rsp) => {
     return;
   }
 
-  const apiKey = "1e0689db7449592f3739"
-  const convCurrKey = `${encodeURIComponent(req.body.oldState.currency)}_${encodeURIComponent(req.body.newCurrency)}`
-  const url = `https://free.currconv.com/api/v7/convert?q=${convCurrKey}&compact=ultra&apiKey=${apiKey}`;
+  const fromCurr = encodeURIComponent(req.body.oldState.currency)
+  const toCurr = encodeURIComponent(req.body.newCurrency)
+  const url = `https://api.apilayer.com/exchangerates_data/convert?from=${fromCurr}&to=${toCurr}&amount=1`
 
-  https.get(url, currConvRsp => {
+  // const convCurrKey = `${encodeURIComponent(req.body.oldState.currency)}_${encodeURIComponent(req.body.newCurrency)}`
+  // const url = `https://free.currconv.com/api/v7/convert?q=${convCurrKey}&compact=ultra&apiKey=${currencyConvApiKey}`;
+
+
+  https.get(url, {headers: {apiKey: exchangeRatesApiKey}}, currConvRsp => {
+  // https.get(url, currConvRsp => {
     var body = ''
 
+    // https://apilayer.com/marketplace/exchangerates_data-api#documentation-tab 
+    // Alternative
     currConvRsp.on('data', c => { body += c })
     currConvRsp.on('end', () => {
       try {
         var currConvRspBody = JSON.parse(body)
       }
       catch (e) {
-        // This typically happens when the free version goes down
-        // https://www.currencyconverterapi.com/server-status
-        console.error("Unable to parse JSON from currency converter")
+        console.error("Unable to parse JSON from exchange rates")
         console.error(body)
         rsp.status(500)
         rsp.send()
         return
       }
 
-      convertCurrency(currConvRspBody[convCurrKey], req.body.newCurrency, req.body.oldState)
+      convertCurrency(currConvRspBody.result, req.body.newCurrency, req.body.oldState)
+      // convertCurrency(currConvRspBody[convCurrKey], req.body.newCurrency, req.body.oldState)
       update.calcTotals(req.body.oldState)
 
       rsp.setHeader('Content-Type', 'application/json');
@@ -117,4 +140,4 @@ router.post("/api/changeCurrency", (req, rsp) => {
   }).on('error', e => { console.error(e); rsp.status(500).send("Error") })
 })
 
-module.exports = router
+module.exports = {router}

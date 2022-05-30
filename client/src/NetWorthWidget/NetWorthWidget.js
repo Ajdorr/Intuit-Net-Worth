@@ -46,12 +46,12 @@ class NetWorthWidget extends Component {
     this.handleCurrencyChange = this.handleCurrencyChange.bind(this);
   }
 
-  handleChange(heading, newValue) {
+  handleChange(heading, newValue, callback) {
     let newState = { ...this.state }
     newState[heading] = newValue
 
     api.post('/api/update', newState).then(rsp => {
-      this.setState(rsp.data)
+      this.setState(rsp.data, callback)
       localStorage.setItem(SAVE_KEY, JSON.stringify(rsp.data))
     }).catch(err => {
       console.log(err) // FIXME 
@@ -137,7 +137,7 @@ class NetWorthWidget extends Component {
         <div className="net-worth-row net-worth-heading">
           <div className="net-worth-heading-title">Total Assets</div>
           <div>{this.state.currencySymbol}</div>
-          <div>{this.state.totalAssets}</div>
+          <div>{this.state.totalAssets.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
         </div>
 
         <div className="net-worth-row net-worth-row-space" />
@@ -166,7 +166,7 @@ class NetWorthWidget extends Component {
         <div className="net-worth-row net-worth-heading">
           <div className="net-worth-heading-title">Total Liabilities</div>
           <div>{this.state.currencySymbol}</div>
-          <div>{this.state.totalLiabilities}</div>
+          <div>{this.state.totalLiabilities.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
         </div>
 
         <div className="net-worth-row net-worth-row-space" />
@@ -174,7 +174,7 @@ class NetWorthWidget extends Component {
         <div className="net-worth-row net-worth-heading">
           <div className="net-worth-heading-title">Net Worth</div>
           <div>{this.state.currencySymbol}</div>
-          <div>{this.state.netWorth}</div>
+          <div>{this.state.netWorth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
         </div>
 
       </div>

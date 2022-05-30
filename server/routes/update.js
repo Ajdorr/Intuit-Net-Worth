@@ -4,7 +4,7 @@ var router = express.Router()
 const Ajv = require("ajv");
 const ajv = new Ajv()
 
-function calcTotals(netWorthObj) {
+const calcTotals = (netWorthObj) => {
 
   netWorthObj.totalAssets = (
     netWorthObj.chequing +
@@ -81,4 +81,4 @@ router.post("/api/update", (req, rsp) => {
   }
 })
 
-module.exports = router
+module.exports = {router, calcTotals}
