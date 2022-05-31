@@ -108,7 +108,6 @@ router.post("/api/changeCurrency", (req, rsp) => {
   // const convCurrKey = `${encodeURIComponent(req.body.oldState.currency)}_${encodeURIComponent(req.body.newCurrency)}`
   // const url = `https://free.currconv.com/api/v7/convert?q=${convCurrKey}&compact=ultra&apiKey=${currencyConvApiKey}`;
 
-
   https.get(url, {headers: {apiKey: exchangeRatesApiKey}}, currConvRsp => {
   // https.get(url, currConvRsp => {
     var body = ''
@@ -128,10 +127,18 @@ router.post("/api/changeCurrency", (req, rsp) => {
         return
       }
 
+      if (currConvRspBody.error || Object.keys(currConvRspBody).length == 0) {
+        console.error("Bad response from currency conversion api")
+        console.error(body)
+        rsp.status(400)
+        rsp.send()
+        return
+      }
+
       convertCurrency(currConvRspBody.result, req.body.newCurrency, req.body.oldState)
       // convertCurrency(currConvRspBody[convCurrKey], req.body.newCurrency, req.body.oldState)
-      update.calcTotals(req.body.oldState)
 
+      update.calcTotals(req.body.oldState)
       rsp.setHeader('Content-Type', 'application/json');
       rsp.send(JSON.stringify(req.body.oldState))
     })
